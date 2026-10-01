@@ -1,0 +1,145 @@
+{{- $alreadyInstalled := false }}
+{{- if .Values.retina.enabled }}
+  {{- range $ns := list "kube-system" "default" "zarf" "retina" }}
+    {{- if lookup "apps/v1" "DaemonSet" $ns "retina-agent" }}
+      {{- $alreadyInstalled = true }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- if and .Values.retina.enabled (not $alreadyInstalled) }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: retina-agent
+  namespace: {{ .Release.Namespace }}
+  labels:
+    k8s-app: retina
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "periscope.fullname" . }}-retina
+  labels:
+    k8s-app: retina
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "nodes", "namespaces", "services", "endpoints"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "periscope.fullname" . }}-retina
+  labels:
+    k8s-app: retina
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "periscope.fullname" . }}-retina
+subjects:
+  - kind: ServiceAccount
+    name: retina-agent
+    namespace: {{ .Release.Namespace }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: retina-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    k8s-app: retina
+data:
+  config.yaml: |
+    apiServer:
+      host: 0.0.0.0
+      port: {{ .Values.retina.metricsPort }}
+    logLevel: info
+    enabledPlugin: [{{- range $i, $p := .Values.retina.plugins }}{{ if $i }},{{ end }}"{{ $p }}"{{- end }}]
+    metricsInterval: {{ .Values.retina.metricsIntervalSeconds }}
+    metricsIntervalDuration: {{ .Values.retina.metricsIntervalSeconds }}s
+    enableTelemetry: false
+    enablePodLevel: false
+    enableConntrackMetrics: false
+    remoteContext: false
+    enableAnnotations: false
+    bypassLookupIPOfInterest: false
+    dataAggregationLevel: low
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: retina-agent
+  namespace: {{ .Release.Namespace }}
+  labels:
+    k8s-app: retina
+spec:
+  selector:
+    matchLabels:
+      k8s-app: retina
+  template:
+    metadata:
+      labels:
+        k8s-app: retina
+    spec:
+      serviceAccountName: retina-agent
+      hostNetwork: true
+      nodeSelector:
+        kubernetes.io/os: linux
+      tolerations:
+        - operator: Exists
+      initContainers:
+        - name: bpf-mount
+          image: busybox:latest
+          command: ["sh", "-c", "mkdir -p /sys/fs/bpf && mount -t bpf bpf /sys/fs/bpf"]
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: bpf
+              mountPath: /sys/fs/bpf
+              mountPropagation: Bidirectional
+      containers:
+        - name: retina
+          image: "{{ .Values.retina.image.repository }}:{{ .Values.retina.image.tag }}"
+          imagePullPolicy: {{ .Values.retina.image.pullPolicy }}
+          command: ["/retina/controller"]
+          args:
+            - "--health-probe-bind-address=:18081"
+            - "--metrics-bind-address=:18080"
+            - "--config"
+            - "/retina/config/config.yaml"
+          ports:
+            - name: retina
+              containerPort: {{ .Values.retina.metricsPort }}
+          securityContext:
+            privileged: true
+            capabilities:
+              add: ["SYS_ADMIN", "NET_ADMIN", "IPC_LOCK"]
+          volumeMounts:
+            - name: bpf
+              mountPath: /sys/fs/bpf
+              mountPropagation: Bidirectional
+            - name: cgroup
+              mountPath: /sys/fs/cgroup
+            - name: config
+              mountPath: /retina/config
+            - name: debug
+              mountPath: /sys/kernel/debug
+            - name: trace
+              mountPath: /sys/kernel/tracing
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: bpf
+          emptyDir: {}
+        - name: cgroup
+          hostPath: { path: /sys/fs/cgroup }
+        - name: config
+          configMap: { name: retina-config }
+        - name: debug
+          hostPath: { path: /sys/kernel/debug }
+        - name: trace
+          hostPath: { path: /sys/kernel/tracing }
+        - name: tmp
+          emptyDir: {}
+{{- end }}

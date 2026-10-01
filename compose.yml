@@ -1,0 +1,67 @@
+name: airgap-dev
+
+x-common-env: &common-env
+  TZ: ${TZ:-UTC}
+
+services:
+  dev:
+    build:
+      context: .
+      dockerfile: docker/dev/Dockerfile
+      target: dev
+      args: &base-args
+        GO_VERSION: ${GO_VERSION}
+        GOPLS_VERSION: ${GOPLS_VERSION}
+        DELVE_VERSION: ${DELVE_VERSION}
+        STATICCHECK_VERSION: ${STATICCHECK_VERSION}
+        GOIMPORTS_VERSION: ${GOIMPORTS_VERSION}
+        GOFUMPT_VERSION: ${GOFUMPT_VERSION}
+        DOTNET_VERSION: ${DOTNET_VERSION}
+        CSHARPLS_VERSION: ${CSHARPLS_VERSION}
+        ZARF_VERSION: ${ZARF_VERSION}
+        NODE_MAJOR: ${NODE_MAJOR}
+        YQ_VERSION: ${YQ_VERSION}
+    image: airgap-dev-dev:local
+    container_name: airgap-dev-dev
+    hostname: dev
+    init: true
+    restart: unless-stopped
+    networks: [airgap-net]
+    environment:
+      <<: *common-env
+    volumes:
+      - ./workspace:/home/dev/workspace
+
+  code-server:
+    build:
+      context: .
+      dockerfile: docker/dev/Dockerfile
+      target: code-server
+      args:
+        <<: *base-args
+        CODE_SERVER_VERSION: ${CODE_SERVER_VERSION}
+        GOLANG_EXT_VERSION: ${GOLANG_EXT_VERSION}
+        CSHARP_EXT_VERSION: ${CSHARP_EXT_VERSION}
+    image: airgap-dev-code-server:local
+    container_name: airgap-dev-code-server
+    hostname: code-server
+    init: true
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${CODE_SERVER_PORT:-8080}:8080"
+    networks: [airgap-net]
+    environment:
+      <<: *common-env
+      PASSWORD: ${CODE_SERVER_PASSWORD:?Set CODE_SERVER_PASSWORD in .env}
+    volumes:
+      - ./workspace:/home/dev/workspace
+      - code_server_data:/home/dev/.local/share/code-server
+      - ./config/code-server/User/settings.json:/home/dev/.local/share/code-server/User/settings.json
+
+networks:
+  airgap-net:
+    name: airgap-dev-net
+
+volumes:
+  code_server_data:
+    name: airgap-dev-code-server-data

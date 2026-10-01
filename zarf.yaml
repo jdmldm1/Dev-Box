@@ -1,0 +1,52 @@
+kind: ZarfPackageConfig
+metadata:
+  name: dev-box
+  description: "Self-contained airgap developer box with code-server IDE, Go/DotNet/Zarf toolchains, and Periscope Airgap Lite web console"
+  version: "1.3.3"
+  architecture: amd64
+
+variables:
+  - name: CODE_SERVER_PASSWORD
+    description: "Password for code-server IDE"
+    default: "phalanx-nomad"
+  - name: PERISCOPE_AUTH_ENABLED
+    description: "Enable authentication for Periscope web console"
+    default: "false"
+
+components:
+  - name: periscope
+    description: "Periscope Airgap Lite (v1.3.3) web console for exploring and managing Kubernetes resources and Zarf packages"
+    required: true
+    images:
+      - ghcr.io/jdmldm1/periscope:1.3.3-airgap-lite
+      - ghcr.io/microsoft/retina/retina-agent:v0.0.2
+      - alpine:latest
+    charts:
+      - name: periscope
+        version: 0.3.3
+        namespace: periscope
+        localPath: ./charts/periscope
+        valuesFiles:
+          - ./charts/periscope/values.yaml
+          - ./charts/periscope/values-airgap-lite.yaml
+
+  - name: dev-box-stack
+    description: "Dev-Box container images, compose definitions, and offline configuration for the dev and code-server containers"
+    required: false
+    default: true
+    images:
+      - airgap-dev-code-server:local
+      - airgap-dev-dev:local
+    files:
+      - source: compose.yml
+        target: compose.yml
+      - source: .env.example
+        target: .env.example
+      - source: config
+        target: config
+      - source: scripts
+        target: scripts
+      - source: dev
+        target: dev
+      - source: dev.ps1
+        target: dev.ps1

@@ -1,0 +1,75 @@
+name: Validate
+
+on:
+  push:
+    branches: [main, master]
+  pull_request: {}
+  workflow_dispatch: {}
+
+concurrency:
+  group: validate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create .env from example
+        run: cp .env.example .env
+
+      - name: Validate compose files
+        run: |
+          docker compose -f compose.yml config --quiet
+
+      - name: Shellcheck
+        run: shellcheck --severity=warning scripts/*.sh dev docker/dev/entrypoint-*.sh
+
+      - name: PowerShell parse check
+        shell: pwsh
+        run: |
+          $files = Get-ChildItem -Path scripts -Filter *.ps1
+          $files += Get-Item dev.ps1
+          $failed = $false
+          foreach ($f in $files) {
+            $tokens = $null; $parseErrors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile($f.FullName, [ref]$tokens, [ref]$parseErrors) | Out-Null
+            if ($parseErrors.Count -gt 0) {
+              Write-Host "::error file=$($f.FullName)::Parse error"
+              $parseErrors | ForEach-Object { Write-Host $_ }
+              $failed = $true
+            }
+          }
+          if ($failed) { exit 1 }
+
+      - name: Validate YAML
+        run: |
+          pip install --quiet pyyaml
+          python3 - <<'PY'
+          import glob, sys, yaml
+          patterns = ['**/*.yml', '**/*.yaml', '.github/**/*.yml', '.github/**/*.yaml']
+          files = sorted(set(f for p in patterns for f in glob.glob(p, recursive=True)))
+          files = [f for f in files if '/templates/' not in f]
+          bad = False
+          for f in files:
+              try:
+                  with open(f) as fh:
+                      yaml.safe_load(fh)
+              except Exception as e:
+                  print(f"INVALID: {f}: {e}")
+                  bad = True
+          if bad:
+              sys.exit(1)
+          print(f"Validated {len(files)} YAML files")
+          PY
+
+      - name: Set up Helm
+        uses: Azure/setup-helm@v4
+
+      - name: Lint and render the Periscope chart
+        run: |
+          helm lint charts/periscope
+          helm template test charts/periscope -f charts/periscope/values.yaml -f charts/periscope/values-airgap-lite.yaml > /dev/null

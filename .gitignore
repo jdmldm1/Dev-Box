@@ -1,0 +1,16 @@
+.env
+
+workspace/*
+!workspace/.gitkeep
+
+offline/bundle/
+offline/*.tar.gz
+offline/*.tar.gz.sha256
+offline/*.zip
+offline/*.zip.sha256
+!offline/.gitkeep
+
+zarf-package-*.tar.zst
+
+.DS_Store
+Thumbs.db
