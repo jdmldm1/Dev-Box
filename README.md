@@ -41,10 +41,37 @@ zarf package create . --confirm
 
 Other commands: `./scripts/stop.sh` (keeps volumes), `--remove-volumes`, `./scripts/status.sh`.
 
-## Tools
+## Included Tools
 
-- **Go** — `./dev go version`; code-server's Go extension uses the baked-in gopls/dlv/staticcheck.
-- **.NET** — `./dev dotnet new console -o /home/dev/workspace/hello`; C# extension bundles Roslyn +
-  netcoredbg, no runtime download.
-- **Zarf** — `./dev zarf version`. No network at runtime; build packages on a connected machine and
-  transfer like the offline bundle.
+### IDE & Interfaces
+- **code-server** — Web browser-based VS Code IDE (accessible on port `8080`).
+- **Extensions** — Go  and C# extensions
+
+### Languages & Runtimes
+- **Go** — Golang SDK 
+- **.NET SDK** — .NET CLI and runtime 
+- **Node.js & npm** — Node.js runtime and npm package manager.
+- **Python 3** — Python 3 with `pip` 
+
+### Language Tooling & Debuggers
+- **Go Tools**:
+  - `gopls` — Language Server Protocol (LSP)
+  - `dlv` — Delve debugger
+  - `staticcheck` — Advanced static analysis and linter
+  - `goimports` — Automatic import organizer
+  - `gofumpt` — Stricter Go code formatter
+- **C# / .NET Tools**:
+  - `csharp-ls` — C# Language Server
+  - Roslyn compiler and language tooling
+
+### Packaging & Air-Gap Tools
+- **Zarf** 
+- **Periscope Airgap Lite**
+
+### CLI Utilities & System Packages
+- **Data & Config Processing**: `jq`, `yq`
+- **Code Search & Navigation**: `ripgrep` (`rg`), `fd-find` (`fd`), `tree`
+- **Version Control**: `git`, `git-lfs`
+- **Build Tools**: `build-essential` (`gcc`, `g++`, `make`)
+- **Transfer & Archive**: `curl`, `wget`, `openssh-client`, `zip`, `unzip`, `tar`
+- **Terminal Editors & Pagers**: `vim`, `nano`, `less`
