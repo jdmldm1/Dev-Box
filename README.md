@@ -1,7 +1,7 @@
 # Dev-Box
 
 Containerized dev environment for air-gapped environment, bundleable in the form of
-- Compose stack
+- Compose stack (tar bundle)
 - Zarf package 
 
 ## Zarf 
@@ -12,7 +12,7 @@ zarf package create . --confirm
 
 ## Compose 
 
-1. On a machine with internet access:
+1. 
    ```bash
    cp .env.example .env
    ./scripts/prepare-online.sh
@@ -25,7 +25,7 @@ zarf package create . --confirm
    ```
    Produces `offline/airgap-dev-offline-bundle.tar.gz` + `.sha256`.
 
-2. Transfer the archive and its `.sha256` across the gap.
+2. Transfer the archive and its `.sha256` to offline machine 
 
 3. On the air-gapped machine (Docker installed there too):
    ```bash
@@ -55,10 +55,8 @@ Other commands: `./scripts/stop.sh` (keeps volumes), `--remove-volumes`, `./scri
 
 ### Language Tooling & Debuggers
 - **Go Tools**:
-  - `gopls` — Language Server Protocol (LSP)
   - `dlv` — Delve debugger
   - `staticcheck` — Advanced static analysis and linter
-  - `goimports` — Automatic import organizer
   - `gofumpt` — Stricter Go code formatter
 - **C# / .NET Tools**:
   - `csharp-ls` — C# Language Server
