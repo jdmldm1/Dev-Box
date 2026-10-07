@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")"
+source scripts/lib.sh
+load_env
+
+CONTAINER="$(container_name_for dev-box)"
+if ! docker inspect "$CONTAINER" >/dev/null 2>&1 || \
+   [[ "$(docker inspect -f '{{.State.Running}}' "$CONTAINER" 2>/dev/null)" != "true" ]]; then
+    die "The dev container isn't running. Start it with scripts/start.sh first."
+fi
+
+TTY_FLAGS="-it"
+[[ -t 0 ]] || TTY_FLAGS="-i"
+
+CMD="${1:-shell}"
+case "$CMD" in
+    shell)
+        exec docker compose exec $TTY_FLAGS dev-box bash
+        ;;
+    *)
+        exec docker compose exec $TTY_FLAGS dev-box "$@"
+        ;;
+esac
