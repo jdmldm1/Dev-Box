@@ -1,0 +1,28 @@
+{
+  "update.mode": "none",
+  "extensions.autoCheckUpdates": false,
+  "extensions.autoUpdate": "off",
+  "telemetry.telemetryLevel": "off",
+
+  "go.toolsManagement.autoUpdate": false,
+  "go.toolsManagement.checkForUpdates": "off",
+  "go.useLanguageServer": true,
+  "go.alternateTools": {
+    "gopls": "/home/dev/go/bin/gopls",
+    "dlv": "/home/dev/go/bin/dlv",
+    "staticcheck": "/home/dev/go/bin/staticcheck",
+    "goimports": "/home/dev/go/bin/goimports",
+    "gofumpt": "/home/dev/go/bin/gofumpt"
+  },
+  "go.formatTool": "gofumpt",
+  "go.lintTool": "staticcheck",
+  "gopls": {
+    "build.env": { "GOFLAGS": "" }
+  },
+
+  "dotnet.server.useOmnisharp": false,
+
+  "editor.formatOnSave": true,
+  "files.autoSave": "onFocusChange",
+  "terminal.integrated.defaultProfile.linux": "bash"
+}

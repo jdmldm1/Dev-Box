@@ -6,11 +6,17 @@ Air-gapped dev environment in a single image (Azure Linux 3.0), shipped as a Zar
 
 ## Zarf
 
+Deploys the Helm chart in `charts/dev-box` to a Zarf-initialized cluster (namespace `dev-box`).
+
 ```bash
 cp .env.example .env
-docker compose build
+docker compose build                          # builds airgap-dev:local
 zarf package create . --confirm
+zarf package deploy zarf-package-dev-box-amd64-1.4.0.tar.zst --confirm --set CODE_SERVER_PASSWORD=<password>
+kubectl -n dev-box port-forward svc/dev-box 8080:8080    # then open http://localhost:8080
 ```
+
+Workspace and code-server data live in PVCs. The chart can also be used directly: `helm install dev-box charts/dev-box -n dev-box --create-namespace --set password=<password>`.
 
 ## Compose
 
