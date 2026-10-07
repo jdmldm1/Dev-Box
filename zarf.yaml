@@ -2,7 +2,7 @@ kind: ZarfPackageConfig
 metadata:
   name: dev-box
   description: "Self-contained airgap developer box with code-server IDE, Go/DotNet/Zarf toolchains"
-  version: "1.4.0"
+  version: "1.4.1"
   architecture: amd64
 
 variables:
@@ -17,7 +17,7 @@ components:
     required: true
     charts:
       - name: dev-box
-        version: 1.4.0
+        version: 1.4.1
         namespace: dev-box
         releaseName: dev-box
         localPath: charts/dev-box

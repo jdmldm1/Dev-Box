@@ -2,5 +2,5 @@ apiVersion: v2
 name: dev-box
 description: Air-gapped dev environment (code-server, Go, .NET, Zarf toolchains)
 type: application
-version: 1.4.0
-appVersion: "1.4.0"
+version: 1.4.1
+appVersion: "1.4.1"
