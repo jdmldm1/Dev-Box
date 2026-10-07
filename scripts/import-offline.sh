@@ -37,9 +37,8 @@ for tarball in "${BUNDLE_DIR}"/images/*.tar; do
 done
 
 log_info "Verifying expected images are now present..."
-for img in airgap-dev:local; do
-    docker image inspect "$img" >/dev/null 2>&1 || die "Image '$img' was not loaded successfully."
-done
+img="airgap-dev:local"
+docker image inspect "$img" >/dev/null 2>&1 || die "Image '$img' was not loaded successfully."
 
 log_info "Copying default configuration if not already present..."
 if [[ ! -f .env ]]; then
