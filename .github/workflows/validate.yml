@@ -26,7 +26,7 @@ jobs:
           docker compose -f compose.yml config --quiet
 
       - name: Shellcheck
-        run: shellcheck --severity=warning scripts/*.sh dev docker/dev/entrypoint-*.sh
+        run: shellcheck --severity=warning scripts/*.sh dev docker/dev/entrypoint.sh
 
       - name: PowerShell parse check
         shell: pwsh
