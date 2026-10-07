@@ -44,7 +44,7 @@ Get-ChildItem (Join-Path $BundleDir "images") -Filter "*.tar" | ForEach-Object {
 }
 
 Write-Info "Verifying expected images are now present..."
-foreach ($img in @("airgap-dev-dev:local", "airgap-dev-code-server:local")) {
+foreach ($img in @("airgap-dev:local")) {
     & docker image inspect $img 2>$null | Out-Null
     if ($LASTEXITCODE -ne 0) { Invoke-Die "Image '$img' was not loaded successfully." }
 }

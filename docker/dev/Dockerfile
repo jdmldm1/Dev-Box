@@ -1,6 +1,6 @@
-ARG UBUNTU_VERSION=22.04
+ARG AZURELINUX_VERSION=3.0
 
-FROM ubuntu:${UBUNTU_VERSION} AS base
+FROM mcr.microsoft.com/azurelinux/base/core:${AZURELINUX_VERSION}
 
 ARG TARGETARCH=amd64
 ARG GO_VERSION
@@ -12,51 +12,35 @@ ARG GOFUMPT_VERSION
 ARG DOTNET_VERSION
 ARG CSHARPLS_VERSION
 ARG ZARF_VERSION
-ARG NODE_MAJOR
-ARG YQ_VERSION
 
-ENV DEBIAN_FRONTEND=noninteractive \
-    LANG=C.UTF-8 \
+ENV LANG=C.UTF-8 \
     LC_ALL=C.UTF-8 \
     TZ=UTC
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN tdnf install -y \
+        binutils \
         ca-certificates \
         curl \
-        gnupg \
-    && mkdir -p /etc/apt/keyrings \
-    && curl -fsSL "https://deb.nodesource.com/setup_${NODE_MAJOR}.x" | bash - \
-    && apt-get install -y --no-install-recommends \
-        bash-completion \
-        build-essential \
-        fd-find \
+        gcc \
+        gcc-c++ \
         git \
-        git-lfs \
-        jq \
+        glibc-devel \
+        gzip \
+        icu \
+        kernel-headers \
         less \
-        libicu70 \
-        libssl3 \
-        nano \
-        nodejs \
-        openssh-client \
-        python3 \
-        python3-pip \
-        python3-venv \
-        ripgrep \
+        make \
+        openssh-clients \
+        openssl-libs \
+        shadow-utils \
         sudo \
-        tree \
+        tar \
+        tcpdump \
         unzip \
-        vim \
-        wget \
-        zip \
-        zlib1g \
-    && ln -sf /usr/bin/fdfind /usr/local/bin/fd \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-RUN curl -fsSL -o /usr/local/bin/yq \
-        "https://github.com/mikefarah/yq/releases/download/v${YQ_VERSION}/yq_linux_${TARGETARCH}" \
-    && chmod +x /usr/local/bin/yq
+        vim-minimal \
+        zlib \
+    && tdnf clean all \
+    && rm -rf /var/cache/tdnf /tmp/* /var/tmp/* /usr/share/doc /usr/share/man /usr/share/info
 
 RUN curl -fsSL -o /tmp/go.tar.gz \
         "https://go.dev/dl/go${GO_VERSION}.linux-${TARGETARCH}.tar.gz" \
@@ -94,9 +78,6 @@ RUN groupadd --gid 1000 dev \
     && mkdir -p /home/dev/workspace /opt/airgap /opt/defaults \
     && chown -R dev:dev /home/dev /opt/airgap /opt/defaults
 
-COPY docker/dev/entrypoint-dev.sh /opt/airgap/entrypoint-dev.sh
-RUN chmod +x /opt/airgap/entrypoint-dev.sh
-
 USER dev
 WORKDIR /home/dev
 ENV HOME=/home/dev \
@@ -116,19 +97,6 @@ RUN go install golang.org/x/tools/gopls@v${GOPLS_VERSION} \
 
 RUN git config --global --add safe.directory /home/dev/workspace \
     && git config --global init.defaultBranch main
-
-FROM base AS dev
-
-LABEL org.opencontainers.image.title="airgap-dev-dev" \
-      org.opencontainers.image.description="Air-gapped dev container: Go, .NET, Zarf, Git"
-
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD command -v go >/dev/null && command -v dotnet >/dev/null && command -v zarf >/dev/null && command -v git >/dev/null || exit 1
-
-ENTRYPOINT ["/opt/airgap/entrypoint-dev.sh"]
-CMD ["sleep", "infinity"]
-
-FROM base AS code-server
 
 ARG CODE_SERVER_VERSION
 ARG GOLANG_EXT_VERSION
@@ -152,13 +120,13 @@ RUN set -eux; \
     rm -rf /tmp/ext /root/.cache /home/dev/.cache; \
     chown -R dev:dev /opt/code-server
 
-COPY docker/dev/entrypoint-code-server.sh /opt/airgap/entrypoint-code-server.sh
-RUN chmod +x /opt/airgap/entrypoint-code-server.sh
+COPY docker/dev/entrypoint.sh /opt/airgap/entrypoint.sh
+RUN chmod +x /opt/airgap/entrypoint.sh
 RUN mkdir -p /home/dev/.local/share/code-server/User \
     && chown -R dev:dev /home/dev/.local/share/code-server
 
-LABEL org.opencontainers.image.title="airgap-dev-code-server" \
-      org.opencontainers.image.description="Air-gapped browser IDE: code-server + Go/C# tooling"
+LABEL org.opencontainers.image.title="airgap-dev" \
+      org.opencontainers.image.description="Air-gapped dev box: code-server, Go, .NET, Zarf, tcpdump"
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
     CMD curl -fsS http://127.0.0.1:8080/healthz || exit 1
@@ -167,4 +135,4 @@ USER dev
 WORKDIR /home/dev
 EXPOSE 8080
 
-ENTRYPOINT ["/opt/airgap/entrypoint-code-server.sh"]
+ENTRYPOINT ["/opt/airgap/entrypoint.sh"]

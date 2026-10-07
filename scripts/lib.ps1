@@ -50,8 +50,7 @@ function Import-DotEnv {
 function Get-ContainerName {
     param([string]$Service)
     switch ($Service) {
-        "dev"         { return "airgap-dev-dev" }
-        "code-server" { return "airgap-dev-code-server" }
+        "dev-box" { return "airgap-dev" }
         default       { return $Service }
     }
 }

@@ -48,8 +48,7 @@ load_env() {
 
 container_name_for() {
     case "$1" in
-        dev)         echo "airgap-dev-dev" ;;
-        code-server) echo "airgap-dev-code-server" ;;
+        dev-box) echo "airgap-dev" ;;
         *)           echo "$1" ;;
     esac
 }

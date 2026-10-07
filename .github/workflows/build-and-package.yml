@@ -7,7 +7,6 @@ on:
     paths:
       - "docker/**"
       - "compose.yml"
-      - "charts/**"
       - "zarf.yaml"
       - ".env.example"
       - ".github/workflows/build-and-package.yml"
@@ -16,7 +15,6 @@ on:
     paths:
       - "docker/**"
       - "compose.yml"
-      - "charts/**"
       - "zarf.yaml"
       - ".env.example"
       - "!**/*.md"
@@ -66,8 +64,6 @@ jobs:
             echo "DOTNET_VERSION=$DOTNET_VERSION"
             echo "CSHARPLS_VERSION=$CSHARPLS_VERSION"
             echo "ZARF_VERSION=$ZARF_VERSION"
-            echo "NODE_MAJOR=$NODE_MAJOR"
-            echo "YQ_VERSION=$YQ_VERSION"
             echo "CODE_SERVER_VERSION=$CODE_SERVER_VERSION"
             echo "GOLANG_EXT_VERSION=$GOLANG_EXT_VERSION"
             echo "CSHARP_EXT_VERSION=$CSHARP_EXT_VERSION"
@@ -76,13 +72,12 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build dev image
+      - name: Build image
         uses: docker/build-push-action@v6
         with:
           context: .
           file: docker/dev/Dockerfile
-          target: dev
-          tags: airgap-dev-dev:local
+          tags: airgap-dev:local
           load: true
           cache-from: type=gha,scope=devbox-base
           cache-to: type=gha,mode=max,scope=devbox-base
@@ -96,31 +91,6 @@ jobs:
             DOTNET_VERSION=${{ env.DOTNET_VERSION }}
             CSHARPLS_VERSION=${{ env.CSHARPLS_VERSION }}
             ZARF_VERSION=${{ env.ZARF_VERSION }}
-            NODE_MAJOR=${{ env.NODE_MAJOR }}
-            YQ_VERSION=${{ env.YQ_VERSION }}
-
-      - name: Build code-server image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: docker/dev/Dockerfile
-          target: code-server
-          tags: airgap-dev-code-server:local
-          load: true
-          cache-from: type=gha,scope=devbox-base
-          cache-to: type=gha,mode=max,scope=devbox-base
-          build-args: |
-            GO_VERSION=${{ env.GO_VERSION }}
-            GOPLS_VERSION=${{ env.GOPLS_VERSION }}
-            DELVE_VERSION=${{ env.DELVE_VERSION }}
-            STATICCHECK_VERSION=${{ env.STATICCHECK_VERSION }}
-            GOIMPORTS_VERSION=${{ env.GOIMPORTS_VERSION }}
-            GOFUMPT_VERSION=${{ env.GOFUMPT_VERSION }}
-            DOTNET_VERSION=${{ env.DOTNET_VERSION }}
-            CSHARPLS_VERSION=${{ env.CSHARPLS_VERSION }}
-            ZARF_VERSION=${{ env.ZARF_VERSION }}
-            NODE_MAJOR=${{ env.NODE_MAJOR }}
-            YQ_VERSION=${{ env.YQ_VERSION }}
             CODE_SERVER_VERSION=${{ env.CODE_SERVER_VERSION }}
             GOLANG_EXT_VERSION=${{ env.GOLANG_EXT_VERSION }}
             CSHARP_EXT_VERSION=${{ env.CSHARP_EXT_VERSION }}
