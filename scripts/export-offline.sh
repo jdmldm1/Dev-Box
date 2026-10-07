@@ -8,8 +8,7 @@ load_env
 
 BUNDLE_DIR="offline/bundle"
 IMAGES=(
-    "airgap-dev-dev:local|images/dev.tar"
-    "airgap-dev-code-server:local|images/code-server.tar"
+    "airgap-dev:local|images/airgap-dev.tar"
 )
 
 log_info "Verifying required images exist locally..."
@@ -43,8 +42,7 @@ cp -r docker "${BUNDLE_DIR}/docker" 2>/dev/null || true
 [[ -f README.md ]] && cp README.md "${BUNDLE_DIR}/README.md" 2>/dev/null || true
 
 log_info "Writing version manifest..."
-DEV_DIGEST="$(docker image inspect --format='{{index .RepoDigests 0}}' airgap-dev-dev:local 2>/dev/null || echo 'n/a (locally built, no registry digest)')"
-CS_DIGEST="$(docker image inspect --format='{{index .RepoDigests 0}}' airgap-dev-code-server:local 2>/dev/null || echo 'n/a (locally built, no registry digest)')"
+IMAGE_DIGEST="$(docker image inspect --format='{{index .RepoDigests 0}}' airgap-dev:local 2>/dev/null || echo 'n/a (locally built, no registry digest)')"
 BUILD_HOST="$(hostname 2>/dev/null || echo unknown)"
 
 cat > "${BUNDLE_DIR}/manifests/version-manifest.json" <<EOF
@@ -52,8 +50,7 @@ cat > "${BUNDLE_DIR}/manifests/version-manifest.json" <<EOF
   "bundle_format": 1,
   "built_on_host": "${BUILD_HOST}",
   "images": {
-    "airgap-dev-dev:local": "${DEV_DIGEST}",
-    "airgap-dev-code-server:local": "${CS_DIGEST}"
+    "airgap-dev:local": "${IMAGE_DIGEST}"
   },
   "versions": {
     "GO_VERSION": "${GO_VERSION}",

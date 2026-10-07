@@ -7,8 +7,7 @@ Import-DotEnv
 
 $BundleDir = "offline\bundle"
 $Images = @(
-    @{ Name = "airgap-dev-dev:local"; Dest = "images\dev.tar" },
-    @{ Name = "airgap-dev-code-server:local"; Dest = "images\code-server.tar" }
+    @{ Name = "airgap-dev:local"; Dest = "imagesirgap-dev.tar" }
 )
 
 Write-Info "Verifying required images exist locally..."
@@ -51,8 +50,7 @@ $manifest = @{
     bundle_format  = 1
     built_on_host  = $env:COMPUTERNAME
     images         = @{
-        "airgap-dev-dev:local"         = Get-Digest "airgap-dev-dev:local"
-        "airgap-dev-code-server:local" = Get-Digest "airgap-dev-code-server:local"
+        "airgap-dev:local" = Get-Digest "airgap-dev:local"
     }
     versions       = @{
         GO_VERSION           = $env:GO_VERSION

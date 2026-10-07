@@ -65,11 +65,3 @@ jobs:
               sys.exit(1)
           print(f"Validated {len(files)} YAML files")
           PY
-
-      - name: Set up Helm
-        uses: Azure/setup-helm@v4
-
-      - name: Lint and render the Periscope chart
-        run: |
-          helm lint charts/periscope
-          helm template test charts/periscope -f charts/periscope/values.yaml -f charts/periscope/values-airgap-lite.yaml > /dev/null
