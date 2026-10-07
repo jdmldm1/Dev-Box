@@ -1,0 +1,17 @@
+{{- range $name, $cfg := dict "workspace" .Values.persistence.workspace "data" .Values.persistence.data }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "dev-box.name" $ }}-{{ $name }}
+  labels:
+    {{- include "dev-box.labels" $ | nindent 4 }}
+spec:
+  accessModes: [ReadWriteOnce]
+  {{- with $.Values.persistence.storageClass }}
+  storageClassName: {{ . | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ $cfg.size }}
+{{- end }}

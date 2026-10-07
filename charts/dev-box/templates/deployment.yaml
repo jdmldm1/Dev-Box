@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "dev-box.name" . }}
+  labels:
+    {{- include "dev-box.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "dev-box.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "dev-box.selectorLabels" . | nindent 8 }}
+      annotations:
+        checksum/settings: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+    spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+        - name: dev-box
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: TZ
+              value: {{ .Values.timezone | quote }}
+            - name: PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "dev-box.secretName" . }}
+                  key: password
+          ports:
+            - name: http
+              containerPort: 8080
+          startupProbe:
+            httpGet: { path: /healthz, port: http }
+            periodSeconds: 5
+            failureThreshold: 36
+          readinessProbe:
+            httpGet: { path: /healthz, port: http }
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /healthz, port: http }
+            periodSeconds: 30
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: workspace
+              mountPath: /home/dev/workspace
+            - name: data
+              mountPath: /home/dev/.local/share/code-server
+            - name: settings
+              mountPath: /home/dev/.local/share/code-server/User/settings.json
+              subPath: settings.json
+      volumes:
+        - name: workspace
+          persistentVolumeClaim:
+            claimName: {{ include "dev-box.name" . }}-workspace
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ include "dev-box.name" . }}-data
+        - name: settings
+          configMap:
+            name: {{ include "dev-box.name" . }}-settings

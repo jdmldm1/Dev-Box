@@ -1,0 +1,27 @@
+image:
+  repository: airgap-dev
+  tag: local
+  pullPolicy: IfNotPresent
+
+# Password for the code-server login. Overridden by the Zarf variable CODE_SERVER_PASSWORD.
+password: changeme-please-edit
+
+# Name of an existing Secret holding the key "password". Overrides `password` when set.
+existingSecret: ""
+
+timezone: UTC
+
+service:
+  type: NodePort
+  port: 8080
+  # Only used when type is NodePort (must be in 30000-32767)
+  nodePort: 30080
+
+persistence:
+  storageClass: ""
+  workspace:
+    size: 10Gi
+  data:
+    size: 1Gi
+
+resources: {}

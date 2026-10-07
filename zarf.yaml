@@ -2,31 +2,38 @@ kind: ZarfPackageConfig
 metadata:
   name: dev-box
   description: "Self-contained airgap developer box with code-server IDE, Go/DotNet/Zarf toolchains"
-  version: "1.3.3"
+  version: "1.4.0"
   architecture: amd64
 
 variables:
   - name: CODE_SERVER_PASSWORD
     description: "Password for code-server IDE"
     default: "phalanx-nomad"
+    sensitive: true
 
 components:
-  - name: dev-box-stack
-    description: "Dev-Box container image, compose definition, and offline configuration for the dev-box container"
-    required: false
-    default: true
+  - name: dev-box
+    description: "Dev-Box code-server deployment, installed with Helm"
+    required: true
+    charts:
+      - name: dev-box
+        version: 1.4.0
+        namespace: dev-box
+        releaseName: dev-box
+        localPath: charts/dev-box
+        variables:
+          - name: CODE_SERVER_PASSWORD
+            description: "Password for code-server IDE"
+            path: password
     images:
       - airgap-dev:local
-    files:
-      - source: compose.yml
-        target: compose.yml
-      - source: .env.example
-        target: .env.example
-      - source: config
-        target: config
-      - source: scripts
-        target: scripts
-      - source: dev
-        target: dev
-      - source: dev.ps1
-        target: dev.ps1
+    actions:
+      onDeploy:
+        after:
+          - description: Wait for dev-box to become available
+            wait:
+              cluster:
+                kind: Deployment
+                name: dev-box
+                namespace: dev-box
+                condition: Available
