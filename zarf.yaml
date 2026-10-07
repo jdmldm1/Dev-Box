@@ -8,7 +8,7 @@ metadata:
 variables:
   - name: CODE_SERVER_PASSWORD
     description: "Password for code-server IDE"
-    default: "phalanx-nomad"
+    default: "password"
     sensitive: true
 
 components:
