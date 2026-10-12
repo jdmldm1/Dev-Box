@@ -25,8 +25,15 @@ jobs:
         run: |
           docker compose -f compose.yml config --quiet
 
+      - name: dist/ mirrors the sources
+        run: |
+          for f in dev dev.ps1 compose.yml .env.example config/code-server/User/settings.json; do
+            diff -u "$f" "dist/$f"
+          done
+          diff -ru scripts dist/scripts
+
       - name: Shellcheck
-        run: shellcheck --severity=warning scripts/*.sh dev docker/dev/entrypoint.sh
+        run: shellcheck --severity=warning scripts/*.sh dist/scripts/*.sh dev docker/dev/entrypoint.sh
 
       - name: PowerShell parse check
         shell: pwsh
