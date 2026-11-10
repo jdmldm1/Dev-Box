@@ -4,6 +4,8 @@ Air-gapped dev environment in a single image (Azure Linux 3.0), shipped as a Zar
 
 **Included:** code-server (port `8080`) with Go and C# extensions, Go (`dlv`, `gopls`, `staticcheck`, `goimports`, `gofumpt`), .NET SDK (`csharp-ls`), Zarf, `git`, `gcc`/`make`, `curl`, `tcpdump`, `ssh`, `vi`.
 
+Two image variants build from the same Dockerfile: `full` (default, everything above) and `go`, which leaves out the .NET SDK, `csharp-ls`, and the C# extension (~1 GB smaller unpacked). Build the Go-only variant with `docker compose --profile go build` (image `airgap-dev:local-go`, served on `CODE_SERVER_PORT_GO`, default `8081`) or `docker build --target go ...`.
+
 ## Zarf
 
 Deploys the Helm chart in `charts/dev-box` to a Zarf-initialized cluster (namespace `dev-box`).
@@ -12,7 +14,7 @@ Deploys the Helm chart in `charts/dev-box` to a Zarf-initialized cluster (namesp
 cp .env.example .env
 docker compose build                          # builds airgap-dev:local
 zarf package create . --confirm
-zarf package deploy zarf-package-dev-box-amd64-1.4.1.tar.zst --confirm --set CODE_SERVER_PASSWORD=<password>
+zarf package deploy zarf-package-dev-box-amd64-1.4.2.tar.zst --confirm --set CODE_SERVER_PASSWORD=<password>
 # Service is a NodePort on 30080. Kind does not publish it by default; either add an extraPortMappings entry for 30080 to the kind config or run:
 # docker run -d --name dev-box-proxy --restart unless-stopped --network kind -p 127.0.0.1:8080:8080 alpine/socat tcp-listen:8080,fork,reuseaddr tcp:<kind-node-container>:30080
 # then open http://localhost:8080
